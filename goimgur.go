@@ -1,12 +1,13 @@
 package goimgur
 
 import (
-	"encoding/base64"
+	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"mime/multipart"
 	"net/http"
-	"net/url"
-	"strings"
+	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 )
@@ -17,37 +18,60 @@ const (
 	clientID     = "62aab02c19fde1d"
 )
 
-func getFile(path string) (string, error) {
-	imgFile, err := ioutil.ReadFile(path)
+func createRequest(uri string, params map[string]string, paramName, path string) (*http.Request, string, error) {
+	file, err := os.Open(path)
 	if err != nil {
-		return "", errors.Wrap(err, "Error opening image file")
+		return nil, "", err
+	}
+	defer file.Close()
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile(paramName, filepath.Base(path))
+	if err != nil {
+		return nil, "", err
+	}
+	_, err = io.Copy(part, file)
+
+	for key, val := range params {
+		_ = writer.WriteField(key, val)
 	}
 
-	base64 := base64.StdEncoding.EncodeToString(imgFile)
-	return base64, nil
+	contentType := writer.FormDataContentType()
+	err = writer.Close()
+	if err != nil {
+		return nil, "", errors.Wrap(err, "Error closing writer")
+	}
+
+	req, err := http.NewRequest("POST", uri, body)
+	if err != nil {
+		return nil, "", errors.Wrap(err, "Error creating HTTP request")
+	}
+
+	return req, contentType, nil
 }
 
 // uploadImage takes path to file as parameter and returns error
 // in case we encounter any error while uploading the image
 func uploadImage(path string) error {
-	base64, err := getFile(path)
-	if err != nil {
-		return errors.Wrap(err, "Error converting image file to base64")
-	}
 
 	client := &http.Client{}
-	form := url.Values{}
-	form.Set("image", base64)
-	req, err := http.NewRequest("GET", uploadAPIUrl, strings.NewReader(form.Encode()))
+	request, contentType, err := createRequest(uploadAPIUrl, nil, "image", "test_data/image_test.jpg")
 	if err != nil {
-		return errors.Wrap(err, "Error generating request to Imgur API")
+		return errors.Wrap(err, "Error adding multipart form to request struct")
 	}
-	req.Header.Add("Authorization", fmt.Sprintf("Client-ID %s", clientID))
-
-	resp, err := client.Do(req)
+	request.Header.Add("Authorization", fmt.Sprintf("Client-ID %s", clientID))
+	request.Header.Add("Content-Type", contentType)
+	resp, err := client.Do(request)
 	if err != nil {
-		return errors.Wrap(err, "Error doing POST to imgur")
+		return errors.Wrap(err, "Error sending POST to imgur")
 	}
-	fmt.Printf("\n\n\n %#v", resp)
+	body := &bytes.Buffer{}
+	_, err = body.ReadFrom(resp.Body)
+	if err != nil {
+		return errors.Wrap(err, "Error reading from response body")
+	}
+	resp.Body.Close()
+	fmt.Println(body)
 	return nil
 }
