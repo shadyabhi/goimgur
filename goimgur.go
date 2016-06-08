@@ -54,24 +54,23 @@ func createRequest(uri string, params map[string]string, paramName, path string)
 
 // uploadImage takes path to file as parameter and returns error
 // in case we encounter any error while uploading the image
-func uploadImage(path string) error {
+func uploadImage(path string) (*bytes.Buffer, error) {
 
 	client := &http.Client{}
 	request, err := createRequest(uploadAPIUrl, nil, "image", "test_data/image_test.jpg")
 	if err != nil {
-		return errors.Wrap(err, "Error adding multipart form to request struct")
+		return nil, errors.Wrap(err, "Error adding multipart form to request struct")
 	}
 	request.Header.Add("Authorization", fmt.Sprintf("Client-ID %s", clientID))
 	resp, err := client.Do(request)
 	if err != nil {
-		return errors.Wrap(err, "Error sending POST to imgur")
+		return nil, errors.Wrap(err, "Error sending POST to imgur")
 	}
 	body := &bytes.Buffer{}
 	_, err = body.ReadFrom(resp.Body)
 	if err != nil {
-		return errors.Wrap(err, "Error reading from response body")
+		return nil, errors.Wrap(err, "Error reading from response body")
 	}
 	resp.Body.Close()
-	fmt.Println(body)
-	return nil
+	return body, nil
 }
