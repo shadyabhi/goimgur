@@ -18,10 +18,10 @@ const (
 	clientID     = "62aab02c19fde1d"
 )
 
-func createRequest(uri string, params map[string]string, paramName, path string) (*http.Request, string, error) {
+func createRequest(uri string, params map[string]string, paramName, path string) (*http.Request, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	defer file.Close()
 
@@ -29,7 +29,7 @@ func createRequest(uri string, params map[string]string, paramName, path string)
 	writer := multipart.NewWriter(body)
 	part, err := writer.CreateFormFile(paramName, filepath.Base(path))
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	_, err = io.Copy(part, file)
 
@@ -40,15 +40,16 @@ func createRequest(uri string, params map[string]string, paramName, path string)
 	contentType := writer.FormDataContentType()
 	err = writer.Close()
 	if err != nil {
-		return nil, "", errors.Wrap(err, "Error closing writer")
+		return nil, errors.Wrap(err, "Error closing writer")
 	}
 
 	req, err := http.NewRequest("POST", uri, body)
 	if err != nil {
-		return nil, "", errors.Wrap(err, "Error creating HTTP request")
+		return nil, errors.Wrap(err, "Error creating HTTP request")
 	}
+	req.Header.Add("Content-Type", contentType)
 
-	return req, contentType, nil
+	return req, nil
 }
 
 // uploadImage takes path to file as parameter and returns error
@@ -56,12 +57,11 @@ func createRequest(uri string, params map[string]string, paramName, path string)
 func uploadImage(path string) error {
 
 	client := &http.Client{}
-	request, contentType, err := createRequest(uploadAPIUrl, nil, "image", "test_data/image_test.jpg")
+	request, err := createRequest(uploadAPIUrl, nil, "image", "test_data/image_test.jpg")
 	if err != nil {
 		return errors.Wrap(err, "Error adding multipart form to request struct")
 	}
 	request.Header.Add("Authorization", fmt.Sprintf("Client-ID %s", clientID))
-	request.Header.Add("Content-Type", contentType)
 	resp, err := client.Do(request)
 	if err != nil {
 		return errors.Wrap(err, "Error sending POST to imgur")
