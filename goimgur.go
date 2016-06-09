@@ -55,7 +55,7 @@ func createRequest(uri string, params map[string]string, paramName, path string)
 
 // uploadImage takes path to file as parameter and returns error
 // in case we encounter any error while uploading the image
-func uploadImage(path string) (*bytes.Buffer, error) {
+func uploadImage(path string) (*http.Response, error) {
 
 	client := &http.Client{}
 	request, err := createRequest(uploadAPIUrl, nil, "image", "test_data/image_test.jpg")
@@ -67,11 +67,15 @@ func uploadImage(path string) (*bytes.Buffer, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Error sending POST to imgur")
 	}
-	body := &bytes.Buffer{}
-	_, err = body.ReadFrom(resp.Body)
+	return resp, nil
+}
+
+// UploadImage lets you upload iamges to imgur.
+// It takes path to image file as argument
+func UploadImage(path string) (*http.Response, error) {
+	resp, err := uploadImage(path)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error reading from response body")
+		return nil, errors.Wrap(err, "Error calling UploadImage")
 	}
-	resp.Body.Close()
-	return body, nil
+	return resp, nil
 }
