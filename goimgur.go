@@ -1,3 +1,4 @@
+// Package goimgur provides helper function for uploading images to imgur.com
 package goimgur
 
 import (
