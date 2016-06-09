@@ -13,10 +13,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Imgur API details
 const (
-	uploadAPIUrl = "https://api.imgur.com/3/image.json"
-	clientID     = "62aab02c19fde1d"
+	uploadAPIURL = "https://api.imgur.com/3/image.json"
+	// ClientID sets client_id that the developer receives after registering the app with imgur.
+	// Set this to avoid API rate limiting
+	ClientID = "62aab02c19fde1d"
 )
 
 func createRequest(uri string, params map[string]string, paramName, path string) (*http.Request, error) {
@@ -58,11 +59,11 @@ func createRequest(uri string, params map[string]string, paramName, path string)
 func uploadImage(path string) (*http.Response, error) {
 
 	client := &http.Client{}
-	request, err := createRequest(uploadAPIUrl, nil, "image", "test_data/image_test.jpg")
+	request, err := createRequest(uploadAPIURL, nil, "image", "test_data/image_test.jpg")
 	if err != nil {
 		return nil, errors.Wrap(err, "Error adding multipart form to request struct")
 	}
-	request.Header.Add("Authorization", fmt.Sprintf("Client-ID %s", clientID))
+	request.Header.Add("Authorization", fmt.Sprintf("Client-ID %s", ClientID))
 	resp, err := client.Do(request)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error sending POST to imgur")
