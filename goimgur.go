@@ -15,10 +15,11 @@ import (
 
 const (
 	uploadAPIURL = "https://api.imgur.com/3/image.json"
-	// ClientID sets client_id that the developer receives after registering the app with imgur.
-	// Set this to avoid API rate limiting
-	ClientID = "62aab02c19fde1d"
 )
+
+// ClientID sets client_id that the developer receives after registering the app with imgur.
+// Set this to avoid API rate limiting
+var ClientID = "62aab02c19fde1d"
 
 func createRequest(uri string, params map[string]string, paramName, path string) (*http.Request, error) {
 	file, err := os.Open(path)
