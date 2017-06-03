@@ -60,7 +60,7 @@ func createRequest(uri string, params map[string]string, paramName, path string)
 func uploadImage(path string) (*http.Response, error) {
 
 	client := &http.Client{}
-	request, err := createRequest(uploadAPIURL, nil, "image", "test_data/image_test.jpg")
+	request, err := createRequest(uploadAPIURL, nil, "image", path)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error adding multipart form to request struct")
 	}
