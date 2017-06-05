@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"../goimgur"
+	"github.com/shadyabhi/goimgur"
 )
 
 func TestUploadImage(t *testing.T) {
