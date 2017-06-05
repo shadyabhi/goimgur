@@ -81,3 +81,14 @@ func UploadImage(path string) (*http.Response, error) {
 	}
 	return resp, nil
 }
+
+// ParseBody is a helper function to parse response (*http.Response) from imgur
+func ParseBody(resp *http.Response) (*bytes.Buffer, error) {
+	body := &bytes.Buffer{}
+	_, err := body.ReadFrom(resp.Body)
+	if err != nil {
+		errors.Wrap(err, "Error executing goimgur.UploadImage")
+	}
+	resp.Body.Close()
+	return body, nil
+}
